@@ -1,25 +1,61 @@
--- se utiliza para buscar
-SELECT p.REFERENCIA, p.DOCUMENTO, p.NAME, p.SURNAME ,P.DESCRIPCION ,p.fecha , p.valor ,c.total, p.ESTADO, c.franchise ,p.RECIBO_ICEBERG, r.VALOR_PAGADO, (p.VALOR - r.VALOR_PAGADO) AS DIFERENCIA 
-from PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago p
-LEFT JOIN PORTAL_PAGOS_CUN.PPT_CUN_DETALLE_RESPUESTA_PAGO r ON r.REFERENCIA = p.REFERENCIA LEFT JOIN PORTAL_PAGOS_CUN.ppt_cun_respuesta_pago c ON c.REFERENCIA = p.REFERENCIA 
-WHERE p.REFERENCIA  IN ('1003894591') ORDER BY p.fecha DESC
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+--- VALIDAR PAGO
 
--- Eliminar registros de Ppt_Cun_Base_ORDENES donde recibo_agrupado coincida / EL PRIMER IN ES EL LA REFERENCIA ANTIGUA
---DELETE FROM PORTAL_PAGOS_CUN.Ppt_Cun_Base_ORDENES WHERE recibo_agrupado IN ('117905820');
+--- PARA VALIDAR PAGO SE DEBE REVISAR PRIMERO EN PLACETOPLAY QUE SI ESTE LA TRASACCION APROVADA 
 
--- Actualizar los registros en Ppt_Cun_Base_ORDENES donde recibo_agrupado coincida / EL PRIMER IN ES EL LA REFERENCIA ANTIGUA Y LA SEGUNDA NUEVA
---UPDATE PORTAL_PAGOS_CUN.Ppt_Cun_Base_ORDENES SET RECIBO_AGRUPADO = '116705076' WHERE recibo_agrupado IN ('117843791');
+-------Validacion pagos -------------------------------REJECTED----------------------------APPROVED-----------------------
 
--- Eliminar registros de ppt_cun_transaccion_pago donde referencia coincida / EL PRIMER IN ES EL LA REFERENCIA NUEVA
---DELETE FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago WHERE referencia IN ('117843791');
+--- ES PARA MIRAR EL HISTORIA DE PAGO POR DOCUMENTO
 
--- Llamar al procedimiento almacenado para procesar pagos aproba
---/ EL PRIMER IN ES EL LA REFERENCIA ANTIGUA DESPUES ,SECUENCIA ES SIEMPRE 1 / VALOR / FRANCHISE 7 FECHA 
-	BEGIN PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados(116705076,1,850000, '_PSE_', TO_DATE('8/10/2025', 'DD/MM/YYYY'), '', '00', 'NORMAL'); COMMIT; END;
--- PARA CONSULTAR SI ESTA EL PAGO EN ICEBER / ES LA ANTIGUA
-select P.*, ROWID from PORTAL_PAGOS_CUN.ppt_cun_detalle_respuesta_pago p where referencia  IN ('117843802')
+select t.ESTADO,t.ESTADO_ICEBERG,t.* from PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago t where documento IN ('1016942271') ORDER BY FECHA DESC; 
 
--- SP DEL CREDITOS  
-BEGIN PORTAL_PAGOS_CUN.PPP_CUN_BASE_CREDITO.procesa_pagos_aprobados(117843802,1,230000, '_PSE_', TO_DATE('30/10/2025', 'DD/MM/YYYY'), '', '00', 'NORMAL'); COMMIT; END;
+--- ES PARA MIRAR EL HISTORIA DE PAGO POR REFERENCIA Y EN DECRICION EL TIPO DE PAGO
+select * from PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago where referencia IN ('118376914','');
 
+--- PARA REVISERA TRANSACCION
+select * from PORTAL_PAGOS_CUN.ppt_cun_respuesta_pago  where referencia IN ('','118376914');
+
+--- ES PARA LO PAGO QUE ESTAN CARGADO EN EL SISTEMA DE ICEBER , SI NO ESTA ES PORQUE NO ESTA EN ICEBER
+select * from PORTAL_PAGOS_CUN.ppt_cun_detalle_respuesta_pago  where referencia IN ('118376914','','');
+
+---- DEPENDIENDO DEL TIPO DE POCO LE ELIGE LA CONSULA 
+---CREDITO:
+SELECT * FROM PORTAL_PAGOS_CUN.Ppt_Cun_Base_CREDITO T WHERE T.recibo_agrupado IN ('118376914');
+
+---ORDENES:
+SELECT T.*, ROWID FROM PORTAL_PAGOS_CUN.Ppt_Cun_Base_ORDENES T WHERE recibo_agrupado IN ('118250139');
+
+
+---PECUNIARIO:
+SELECT T.*, ROWID FROM Ppt_Cun_Base_PECUNIARIOS T WHERE recibo_agrupado IN ('117101426');
+
+
+
+--PARA REFERENCIAR O CARGAR PAGOS credito
+
+--- POR EL MOMENTO NO UTILIZAR
+DELETE FROM PORTAL_PAGOS_CUN.PPT_CUN_BASE_CREDITO WHERE recibo_agrupado IN (112923913);
+commit;
+
+
+--SE UTILIZA PARA ACTUALIZAR LA ANTIGUA REFERENCIA CON EL RECIBO DE LA NUEVA REFERENCIA QUE SE CREA EN EL PORTAL DE PAGOS 
+                                                                    --Antigua                             --Nueva
+UPDATE PORTAL_PAGOS_CUN.PPT_CUN_BASE_CREDITO SET RECIBO_AGRUPADO = '117973906' WHERE recibo_agrupado IN ('118248441');
+COMMIT;
+
+
+--SE UTILIZA PARA ACTUALIZAR LA ANTIGUA REFERENCIA CON EL RECIBO DE LA NUEVA REFERENCIA QUE SE CREA EN EL PORTAL DE PAGOS 
+--Pecuniarios 
+UPDATE PORTAL_PAGOS_CUN.PPT_CUN_BASE_PECUNIARIOS pcbp SET RECIBO_AGRUPADO = '114433690' WHERE recibo_agrupado IN ('116529123');
+commit;
+
+
+--SE UTILIZA PARA ELIMINAR LA NUEVA REFERENCIA QUE SE CREO EN EL PORTAL DE PAGOS 
+                                                                           --Nueva
+DELETE FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago WHERE referencia IN ('118248441');
+commit;
+
+-- SE UTILIZA CUANDO QUEDA REPREZADO EN LA BASE Y NO SUBIO A ICEBERD
+                                                                --referencia--secuencia-pago-franchyse-fecha del pago--
+BEGIN  PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados(118250139,1,99784,'PSE',TO_DATE('07/11/2025','DD/MM/YYYY'),'','00','NORMAL');  
+COMMIT;
+end;
