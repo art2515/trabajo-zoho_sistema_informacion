@@ -31,7 +31,7 @@ TABLAS Y OBJETOS INVOLUCRADOS:
 - Procedimiento: PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados → 
   Ejecuta el proceso manual de carga del pago en ICEBERG.
 
-***********************************************************************************************/
+idacion pagos -------------------------------REJECTED----------------------------APPROVED-----------------------
 
 
 /*-----------------------------------------------------------
@@ -160,3 +160,4 @@ BEGIN
   );  
 COMMIT;
 END;
+
