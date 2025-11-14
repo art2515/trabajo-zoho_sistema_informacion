@@ -43,7 +43,7 @@ SECCIÓN 1: VALIDACIÓN DE PAGOS EN EL PORTAL (PLACETOPAY)
 */
 SELECT t.ESTADO, t.ESTADO_ICEBERG, t.* 
 FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago t 
-WHERE documento IN ('1072703887') 
+WHERE documento IN ('1108932127') 
 ORDER BY FECHA DESC;
 
 
@@ -52,13 +52,13 @@ ORDER BY FECHA DESC;
 */
 SELECT * 
 FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago 
-WHERE referencia IN ('118411525', '');
+WHERE referencia IN ('3210435', ''); -- Tabla 1
 
 
 /* Consultar detalles de la transacción asociada a una referencia específica */
 SELECT * 
 FROM PORTAL_PAGOS_CUN.ppt_cun_respuesta_pago  
-WHERE referencia IN ('', '118411525');
+WHERE referencia IN ('3210435', ''); -- Tabla 2
 
 
 /* Consultar los pagos que fueron cargados al sistema ICEBERG
@@ -66,7 +66,66 @@ WHERE referencia IN ('', '118411525');
 */
 SELECT * 
 FROM PORTAL_PAGOS_CUN.ppt_cun_detalle_respuesta_pago  
-WHERE referencia IN ('118411525', '', '');  -- Tabla 3
+WHERE referencia IN ('118621847', '', '');  -- Tabla 3
+
+
+--Nomenclatura banco se utilizas crear la nueva linea de pago a cargar en iceberd
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Credibanco Visa';--110770968
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Bancolombia';--83213107
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'American Express';
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Visa';
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'MasterCard';--2525440
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Cuentas débito ahorro y corriente (PSE)'; --83221878
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Corresponsales bancarios Grupo Aval';--83218880
+
+
+-- es para consulta Datos personales de las persona
+
+SELECT  * FROM bas_tercero 
+ WHERE NUM_IDENTIFICACION = '52433704';
+
+/*-----------------------------------------------------------
+SECCIÓN 4: PROCESAR PAGOS REPRESADOS MANUALMENTE
+-----------------------------------------------------------*/
+
+/* Se utiliza cuando el pago quedó registrado en el portal 
+   pero no se cargó automáticamente en ICEBERG.
+   pero solo se hace cuando esta en la tabla 1 y 2 , en tal caso que no esta se crea la linea en la tabla 2  
+
+   Parámetros:
+   - referencia (número de pago)
+   - secuencia
+   - pago
+   - franquicia (tipo de pago: PSE, tarjeta, etc.)
+   - fecha del pago
+   - campos adicionales vacíos o normales según el caso
+*/
+BEGIN  
+  PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados(
+    118621847,         -- referencia
+    1,                 -- secuencia -- siempre es 1 pero hay casos que son pagos represados 
+    997300,             -- número de pago
+    'PSE',             -- franquicia
+    TO_DATE('14/11/2025','DD/MM/YYYY'),  -- fecha del pago
+    '', 
+    '00', 
+    'NORMAL'
+  );  
+COMMIT;
+END;
 
 
 
@@ -83,7 +142,7 @@ WHERE T.recibo_agrupado IN ('118376914');
 /* PAGOS DE ORDENES */
 SELECT T.*, ROWID 
 FROM PORTAL_PAGOS_CUN.Ppt_Cun_Base_ORDENES T 
-WHERE recibo_agrupado IN ('118250139');
+WHERE recibo_agrupado IN ('118621847');
 
 
 /* PAGOS PECUNIARIOS */
@@ -132,32 +191,5 @@ COMMIT;
 
 
 
-/*-----------------------------------------------------------
-SECCIÓN 4: PROCESAR PAGOS REPRESADOS MANUALMENTE
------------------------------------------------------------*/
 
-/* Se utiliza cuando el pago quedó registrado en el portal 
-   pero no se cargó automáticamente en ICEBERG.
-
-   Parámetros:
-   - referencia (número de pago)
-   - secuencia
-   - pago
-   - franquicia (tipo de pago: PSE, tarjeta, etc.)
-   - fecha del pago
-   - campos adicionales vacíos o normales según el caso
-*/
-BEGIN  
-  PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados(
-    118250139,         -- referencia
-    1,                 -- secuencia
-    99784,             -- número de pago
-    'PSE',             -- franquicia
-    TO_DATE('07/11/2025','DD/MM/YYYY'),  -- fecha del pago
-    '', 
-    '00', 
-    'NORMAL'
-  );  
-COMMIT;
-END;
 
