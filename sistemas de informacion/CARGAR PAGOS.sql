@@ -1,5 +1,5 @@
 /***********************************************************************************************
-PROCESO: Validación y Gestión de Pagos
+PROCESO: Validación, Gestión de Pagos,Cargar pagos
 ------------------------------------------------------------------------------------------------
 DESCRIPCIÓN GENERAL:
 Este proceso permite validar el estado de los pagos realizados por los estudiantes en el 
@@ -21,15 +21,6 @@ VALIDACIONES PRINCIPALES:
    según el tipo de pago (Crédito, Orden o Pecuniario).
 
 ------------------------------------------------------------------------------------------------
-TABLAS Y OBJETOS INVOLUCRADOS:
-- PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago → Transacciones registradas en el portal.
-- PORTAL_PAGOS_CUN.ppt_cun_respuesta_pago → Respuestas del gateway (PLACETOPAY).
-- PORTAL_PAGOS_CUN.ppt_cun_detalle_respuesta_pago → Detalles técnicos de pagos cargados.
-- PORTAL_PAGOS_CUN.Ppt_Cun_Base_CREDITO → Pagos tipo crédito.
-- PORTAL_PAGOS_CUN.Ppt_Cun_Base_ORDENES → Pagos por órdenes.
-- PORTAL_PAGOS_CUN.Ppt_Cun_Base_PECUNIARIOS → Pagos pecuniarios.
-- Procedimiento: PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados → 
-  Ejecuta el proceso manual de carga del pago en ICEBERG.
 
 Validacion pagos -------------------------------REJECTED----------------------------APPROVED-----------------------
 
@@ -41,11 +32,16 @@ SECCIÓN 1: VALIDACIÓN DE PAGOS EN EL PORTAL (PLACETOPAY)
 /* Validar si la transacción aparece con estado APPROVED
    Muestra el historial de pagos por documento
 */
+-- busqueda por cc
 SELECT t.ESTADO, t.ESTADO_ICEBERG, t.* 
 FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago t 
-WHERE documento IN ('1108932127') 
+WHERE documento IN ('1085906367')
 ORDER BY FECHA DESC;
-
+-- busqueda por referencia
+SELECT t.ESTADO, t.ESTADO_ICEBERG, t.* 
+FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago t 
+WHERE t.REFERENCIA  IN ('118660202')
+ORDER BY FECHA DESC;
 
 /* Consultar historial de pago por referencia
    - En la columna DESCRIPCION aparece el tipo de pago (crédito, orden, pecuniario, etc.)
@@ -58,7 +54,7 @@ WHERE referencia IN ('3210435', ''); -- Tabla 1
 /* Consultar detalles de la transacción asociada a una referencia específica */
 SELECT * 
 FROM PORTAL_PAGOS_CUN.ppt_cun_respuesta_pago  
-WHERE referencia IN ('3210435', ''); -- Tabla 2
+WHERE referencia IN ('118660202', ''); -- Tabla 2
 
 
 /* Consultar los pagos que fueron cargados al sistema ICEBERG
@@ -86,7 +82,7 @@ SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
 WHERE p.PAYMENTMETHODNAME  = 'MasterCard';--2525440
 
 SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
-WHERE p.PAYMENTMETHODNAME  = 'Cuentas débito ahorro y corriente (PSE)'; --83221878
+WHERE p.PAYMENTMETHODNAME  = 'Cuentas débito ahorro y corriente (PSE)'AND p.ISSUERNAME = 'BANCO FALABELLA' ORDER by p.REFERENCIA desc; --83221878
 
 SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
 WHERE p.PAYMENTMETHODNAME  = 'Corresponsales bancarios Grupo Aval';--83218880
@@ -126,7 +122,6 @@ BEGIN
   );  
 COMMIT;
 END;
-
 
 
 /*-----------------------------------------------------------
@@ -188,9 +183,6 @@ COMMIT;
 DELETE FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago 
 WHERE referencia IN ('118248441');
 COMMIT;
-
-
-
 
 
 
