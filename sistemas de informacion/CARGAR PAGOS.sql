@@ -1,5 +1,5 @@
 /***********************************************************************************************
-PROCESO: Validación, Gestión de Pagos,Cargar pagos, Rechazar pagos
+PROCESO: Validación, Gestión de Pagos,Cargar pagos, Rechazar pagos , empujar pagos
 ------------------------------------------------------------------------------------------------
 DESCRIPCIÓN GENERAL:
 Este proceso permite validar el estado de los pagos realizados por los estudiantes en el 
@@ -13,7 +13,7 @@ Además, incluye consultas para:
 - Procesar manualmente pagos represados que no se subieron automáticamente a ICEBERG.
 
 /*-----------------------------------------------------------
-SECCIÓN 1: VALIDACIÓN DE PAGOS EN EL PORTAL (PLACETOPAY)/ RECHAZAR PAGOS
+SECCIÓN 1: VALIDACIÓN DE PAGOS EN EL PORTAL (PLACETOPAY)/ RECHAZAR PAGOS Y EMPUJAR PAGOS
 -----------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------------------------
@@ -35,12 +35,12 @@ VALIDACIONES PRINCIPALES:
 -- busqueda por cc
 SELECT t.ESTADO, t.ESTADO_ICEBERG, t.* 
 FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago t 
-WHERE documento IN ('15889457')
+WHERE documento IN ('1072527983')
 ORDER BY FECHA DESC;
 -- busqueda por referencia
 SELECT t.ESTADO, t.ESTADO_ICEBERG, t.* 
 FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago t 
-WHERE t.REFERENCIA  IN ('118663471')
+WHERE t.REFERENCIA  IN ('118903436')
 ORDER BY FECHA DESC;
 
 /* Consultar historial de pago por referencia
@@ -48,13 +48,14 @@ ORDER BY FECHA DESC;
 */
 SELECT * 
 FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago 
-WHERE referencia IN ('118663471', ''); -- Tabla 1
+WHERE referencia IN ('118903436', ''); -- Tabla 1
 
 
 /* Consultar detalles de la transacción asociada a una referencia específica */
+-- Si no esta registrado , lo registro manualmente tomando los datos de desde placetopay para empujar los datos a la tabla 3
 SELECT * 
 FROM PORTAL_PAGOS_CUN.ppt_cun_respuesta_pago  
-WHERE referencia IN ('118660202', ''); -- Tabla 2
+WHERE referencia IN ('118903436', '99999945'); -- Tabla 2
 
 
 /* Consultar los pagos que fueron cargados al sistema ICEBERG
@@ -62,7 +63,7 @@ WHERE referencia IN ('118660202', ''); -- Tabla 2
 */
 SELECT * 
 FROM PORTAL_PAGOS_CUN.ppt_cun_detalle_respuesta_pago  
-WHERE referencia IN ('118660202', '', '');  -- Tabla 3
+WHERE referencia IN ('118903436', '', '');  -- Tabla 3
 
 
 --Nomenclatura banco se utilizas se utiliza como referencias para crear la nueva linea de pago a cargar en iceberd
@@ -82,7 +83,7 @@ SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
 WHERE p.PAYMENTMETHODNAME  = 'MasterCard';--2525440
 
 SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
-WHERE p.PAYMENTMETHODNAME  = 'Cuentas débito ahorro y corriente (PSE)'AND p.ISSUERNAME = 'BANCO FALABELLA' ORDER by p.REFERENCIA desc; --83221878
+WHERE p.PAYMENTMETHODNAME  = 'Cuentas débito ahorro y corriente (PSE)'AND p.ISSUERNAME = 'NEQUI' ORDER by p.REFERENCIA desc; --99999945
 
 SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
 WHERE p.PAYMENTMETHODNAME  = 'Corresponsales bancarios Grupo Aval';--83218880
@@ -94,39 +95,18 @@ SELECT  * FROM bas_tercero
  WHERE NUM_IDENTIFICACION = '52433704';
 
 /*-----------------------------------------------------------
-SECCIÓN 4: PROCESAR PAGOS REPRESADOS MANUALMENTE
+SECCIÓN 2: SE UTILIZA PARA CARGAR LOS PAGO REPRESADOS , SE PUEDEN EMPUJAR O CREAR LOS PAGOS  
 -----------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------------
+VALIDACIONES PRINCIPALES:
+EMPUJAR
+1. Verificar primero en **PLACETOPAY** que la transacción tenga estado **APPROVED**.
+2. Confirmar que el pago aparezca en las tablas del tabla 1 y 2 y aparte que apareca en una de las tablas de credito, pagos ordenes o pecuniarios.
+CREAR
+1. Verificar primero en **PLACETOPAY** que la transacción tenga estado **APPROVED**.
+2. Confirmar que el pago aparezca en las tablas del tabla 1 y 2 y que no este en una de las tablas de credito, pagos ordenes o pecuniarios.
 
-/* Se utiliza cuando el pago quedó registrado en el portal 
-   pero no se cargó automáticamente en ICEBERG.
-   pero solo se hace cuando esta en la tabla 1 y 2 y no aparece en la tabla 3 , en tal caso que no esta se crea la linea en la tabla 2  
-
-   Parámetros:
-   - referencia (número de pago)
-   - secuencia
-   - pago
-   - franquicia (tipo de pago: PSE, tarjeta, etc.)
-   - fecha del pago
-   - campos adicionales vacíos o normales según el caso
-*/
-BEGIN  
-  PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados(
-    118621847,         -- referencia
-    1,                 -- secuencia -- siempre es 1 pero hay casos que son pagos represados 
-    997300,             -- número de pago
-    'PSE',             -- franquicia
-    TO_DATE('14/11/2025','DD/MM/YYYY'),  -- fecha del pago
-    '', 
-    '00', 
-    'NORMAL'
-  );  
-COMMIT;
-END;
-
-
-/*-----------------------------------------------------------
-SECCIÓN 2: CONSULTAS SEGÚN TIPO DE PAGO
------------------------------------------------------------*/
+------------------------------------------------------------------------------------------------*/ 
 
 /* PAGOS DE CRÉDITO */
 SELECT * 
@@ -146,34 +126,50 @@ FROM Ppt_Cun_Base_PECUNIARIOS T
 WHERE recibo_agrupado IN ('117101426');
 
 
-
 /*-----------------------------------------------------------
-SECCIÓN 3: OPERACIONES DE MANTENIMIENTO Y AJUSTES
+SECCIÓN 4: PROCESAR PAGOS REPRESADOS MANUALMENTE
 -----------------------------------------------------------*/
 
-/* ⚠️ NO UTILIZAR POR EL MOMENTO
-   (Eliminar un registro de pago crédito del sistema)
-*/
-DELETE FROM PORTAL_PAGOS_CUN.PPT_CUN_BASE_CREDITO 
-WHERE recibo_agrupado IN (112923913);
-COMMIT;
+/* Se utiliza cuando el pago quedó registrado en el portal 
+   pero no se cargó automáticamente en ICEBERG.
+   pero solo se hace cuando esta en la tabla 1, 2 y de las tablas de credito, pagos ordenes o pecuniarios y no aparece en la tabla 3 , 
 
+*/
+BEGIN  
+  PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados(
+    118621847,         -- referencia
+    1,                 -- secuencia -- siempre es 1 pero hay casos que son pagos represados 
+    997300,             -- número de pago
+    'PSE',             -- franquicia
+    TO_DATE('14/11/2025','DD/MM/YYYY'),  -- fecha del pago
+    '', 
+    '00', 
+    'NORMAL'
+  );  
+COMMIT;
+END;
+
+
+/*-----------------------------------------------------------
+SECCIÓN 3: OPERACIONES DE MANTENIMIENTO Y AJUSTES , ESTO SE UTILIZA PARA CREAR LA LINIA Y CREAR EL PAGO CON LA NUEVA REFENCIA 
+-----------------------------------------------------------*/
 
 /* Actualizar la referencia antigua con la nueva referencia generada en el portal de pagos
    - Se usa cuando se crea una nueva referencia y debe reemplazar la anterior.
    - Ejemplo: (Antigua → Nueva)
 */
+
 UPDATE PORTAL_PAGOS_CUN.PPT_CUN_BASE_CREDITO 
-SET RECIBO_AGRUPADO = '117973906' 
-WHERE recibo_agrupado IN ('118248441');
+SET RECIBO_AGRUPADO = '117973906' -- ANTIGUA	
+WHERE recibo_agrupado IN ('118248441');-- NUEVA
 COMMIT;
 
 
 /* Actualizar referencia en pagos pecuniarios 
    (Antigua → Nueva) */
 UPDATE PORTAL_PAGOS_CUN.PPT_CUN_BASE_PECUNIARIOS pcbp 
-SET RECIBO_AGRUPADO = '114433690' 
-WHERE recibo_agrupado IN ('116529123');
+SET RECIBO_AGRUPADO = '114433690' -- ANTIGUA	
+WHERE recibo_agrupado IN ('116529123');-- NUEVA
 COMMIT;
 
 
@@ -181,7 +177,10 @@ COMMIT;
    (Ejemplo: borrar registro erróneo)
 */
 DELETE FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago 
-WHERE referencia IN ('118248441');
+WHERE referencia IN ('118248441'); -- NUEVA
 COMMIT;
+
+
+
 
 
