@@ -43,14 +43,14 @@ WHERE orden = 112713; -- Orden_inicial
 /* Ver todos los trámites realizados por el estudiante */
 SELECT tramite, orden,t.ORDEN_INICIAL, valor_financiacion, t.*, rowid 
 FROM iceberg.cunt_tramite_externo t 
-WHERE identificacion = '1030637576';  --- Tabla 1
+WHERE identificacion = '1022352352';  --- Tabla 1
 
 
 /* Ver historial de transacciones del estudiante */
 /*Si aparece en la primera tabla y no en la segunda toca clear el registro*/
 SELECT t.*, rowid 
 FROM iceberg.cltiene_transaccion_his t 
-WHERE numidentificacion in ('1030637576','');  --- Tabla 2 -- cc para crear registros 1030637576 -- los datos se consigue de la tabla 1
+WHERE numidentificacion in ('1022352352');  --- Tabla 2 -- cc para crear registros 1030637576 -- los datos se consigue de la tabla 1
  --la referencia es = a tramite ,--MENSAJE = OK-REFERENCIA --ORDEN = ORDEN-- ORDENPAGO = ORDENINICIAL --ID,FECHA_CREACION,USU_CREACION = NULL -- PORCENTAJE_AVAL = 0, FUERZA_COMERCIAL = AGENTE COMERCIAL
 
 
@@ -65,8 +65,11 @@ WHERE numidentificacion in ('1030637576','');  --- Tabla 2 -- cc para crear regi
 */
 SELECT referencia_pago, orden_cun, valor_financiacion, ESTADO_FINANCIACION, t.*
 FROM iceberg.cltiene_360_estudiantes t 
-WHERE numero_documento IN ('1030637576', '');  --- Tabla 3
+WHERE numero_documento IN ('1022352352', '');  --- Tabla 3 
 
+SELECT referencia_pago, orden_cun, valor_financiacion, ESTADO_FINANCIACION, t.*
+FROM iceberg.cltiene_360_estudiantes t 
+WHERE t.REFERENCIA_PAGO  IN ('119101230', '');
 
 
 /*-----------------------------------------------------------
@@ -81,8 +84,8 @@ SECCIÓN 2: APLICAR EL 50%
 INSERT INTO ICEBERG.cltiene_360_estudiantes
 SELECT * 
 FROM ICEBERG.v_inserta_estudiantes_360  
-WHERE numero_documento = '1030637576'
-  AND referencia_pago = '118952135';-- tramite
+WHERE numero_documento = '1022352352'
+  AND referencia_pago = '119101230';-- tramite
 
 
 /* Validar que el registro se haya insertado correctamente */
