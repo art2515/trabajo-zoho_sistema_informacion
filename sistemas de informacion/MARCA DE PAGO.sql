@@ -1,4 +1,4 @@
-https://github.com/Cristianjva05/trabajo-zoho_sistema_informacion/tree/mainUPDATE --Modifica los registros existentes en una tabla
+--Modifica los registros existentes en una tabla
 --select * from 
   src_enc_liquidacion L 
 SET 
