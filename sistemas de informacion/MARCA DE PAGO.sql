@@ -4,11 +4,12 @@
 
 
 
+
 UPDATE --Modifica los registros existentes en una tabla
 --select * from 
   src_enc_liquidacion L 
 SET 
-  L.est_liquidacion = 2
+  L.est_liquidacion = 1 --1 ES QUITAR MARCA DE PAGO , Y 2 ES COLOCAR
 WHERE -- Clausula que determina cuentos registros se actualizaran
   L.id_alum_programa IN (
                           SELECT  
@@ -25,9 +26,9 @@ WHERE -- Clausula que determina cuentos registros se actualizaran
                             , src_uni_academica U
                           WHERE 
                             B.id_tercero = P.id_tercero
-                            AND B.num_identificacion IN ('1144038739') --Numero de identificacion
+                            AND B.num_identificacion IN ('1120569110'/*,'14254055','1032378409','1032378409','1022334153','1003623021','1026252338'*/) --Numero de identificacion
                             AND U.cod_unidad = P.cod_unidad
                           --AND P.cod_pensum = '1110' 
                           --AND P.cod_unidad = 'VTE01'
                         )
-  AND L.cod_periodo = '25V06';
+  AND L.cod_periodo = '25V05';
