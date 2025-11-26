@@ -1,0 +1,15 @@
+select ba.num_identificacion id_actualiza, ba.nom_largo nom_actualiza, h.fec_ult_act, 
+            bc.num_identificacion id_crea, bc.nom_largo nom_crea, h.fec_creacion,
+            h.cod_materia, a.cod_unidad, a.cod_pensum, h.cod_periodo, h.cod_materia, m.nom_materia,
+            h.def_historia, h.tip_nota, h.sem_cursada, h.est_materia from bas_tercero b
+            inner join src_alum_programa a on a.id_tercero = b.id_tercero
+            inner join src_his_academica h on h.id_alum_programa = a.id_alum_programa
+            inner join src_mat_pensum m on m.cod_unidad = a.cod_unidad
+            and m.cod_pensum = a.cod_pensum and m.cod_materia = h.cod_materia
+            left join bas_tercero ba on ba.id_tercero = h.usu_actualizacion
+            left join bas_tercero bc on bc.id_tercero = h.usu_creacion
+            where b.num_identificacion='1016085962'
+            and a.cod_unidad='1TC01'
+            and a.cod_pensum='1034N'
+            and h.cod_materia in ('25009', '14026')
+            order by  h.cod_materia, h.est_materia
