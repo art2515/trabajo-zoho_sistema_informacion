@@ -55,7 +55,7 @@ WHERE referencia IN ('118903436', ''); -- Tabla 1
 -- Si no esta registrado , lo registro manualmente tomando los datos de desde placetopay para empujar los datos a la tabla 3
 SELECT * 
 FROM PORTAL_PAGOS_CUN.ppt_cun_respuesta_pago  
-WHERE referencia IN ('118903436', '99999945'); -- Tabla 2
+WHERE referencia IN ('118903436', ''); -- Tabla 2 --99999945
 
 
 /* Consultar los pagos que fueron cargados al sistema ICEBERG
@@ -179,6 +179,7 @@ COMMIT;
 DELETE FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago 
 WHERE referencia IN ('118248441'); -- NUEVA
 COMMIT;
+
 
 
 
