@@ -1,0 +1,130 @@
+--PARA REFERENCIAR O CARGAR PAGOS ORDENES
+
+UPDATE PORTAL_PAGOS_CUN.PPT_CUN_BASE_ORDENES SET RECIBO_AGRUPADO='1944140369' WHERE recibo_agrupado IN ('118511776');
+commit;
+
+DELETE FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago WHERE referencia IN (111769814);
+commit;
+
+	BEGIN  PORTAL_PAGOS_CUN.PPP_CUN_BASE_ORDENES.procesa_pagos_aprobados(1944140369,2,731300,'_PSE_',TO_DATE('21/11/2025','DD/MM/YYYY'),'','00','NORMAL');
+	COMMIT;
+	end;
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+--PARA REFERENCIAR O CARGAR PAGOS pecunario
+
+DELETE FROM PORTAL_PAGOS_CUN.PPT_CUN_BASE_PECUNIARIOS  WHERE recibo_agrupado IN (111295374);
+commit;
+
+UPDATE PORTAL_PAGOS_CUN.PPT_CUN_BASE_PECUNIARIOS SET RECIBO_AGRUPADO='111295374' WHERE recibo_agrupado IN ('111717543');
+commit;
+
+DELETE FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago WHERE referencia IN (111717543);
+commit;
+
+BEGIN  PORTAL_PAGOS_CUN.PPP_CUN_BASE_PECUNARIOS.procesa_pagos_aprobados (111295374,1,364014,'_PSE_','23/06/2025','','00','NORMAL');
+COMMIT;
+end;
+
+
+BEGIN PORTAL_PAGOS.PPP_CUN_BASE_PECUNARIOS.PROCESA_PAGOS_APROBRADOS (110426917,2,1000000,'_PSE_','01/06/2025','','00','NORMAL');
+COMMIT;
+END;
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--PARA REFERENCIAR O CARGAR PAGOS credito
+
+DELETE FROM PORTAL_PAGOS_CUN.PPT_CUN_BASE_CREDITO WHERE recibo_agrupado IN (111295374);
+commit;
+
+UPDATE PORTAL_PAGOS_CUN.PPT_CUN_BASE_CREDITO SET RECIBO_AGRUPADO = '1944140369' WHERE recibo_agrupado IN ('119182338');
+commit;
+
+DELETE FROM PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago WHERE referencia IN (118399586);
+commit;
+																--referencia--secuencia-pago-franchyse-fecha del pago--
+BEGIN  PORTAL_PAGOS_CUN.PPP_CUN_BASE_CREDITO.procesa_pagos_aprobados(118455807,3,200000,'RM_MC',TO_DATE('10/11/2025','DD/MM/YYYY'),'','00','NORMAL');
+COMMIT;
+end;
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---CREDITO:
+SELECT * FROM PORTAL_PAGOS_CUN.Ppt_Cun_Base_CREDITO T WHERE T.recibo_agrupado IN ('1944140369');
+
+---ORDENES:
+SELECT T.*, ROWID FROM PORTAL_PAGOS_CUN.Ppt_Cun_Base_ORDENES T WHERE recibo_agrupado IN ('1944140369');
+
+---PECUNIARIO:
+SELECT T.*, ROWID FROM Ppt_Cun_Base_PECUNIARIOS T WHERE recibo_agrupado IN ('1944140369');
+
+SELECT T.*, ROWID FROM PORTAL_PAGOS_CUN.
+
+----------------------------------------------------------------------------RECHAZAR EL PAGO----------------------------------------------------------------------------------------
+
+UPDATE PORTAL_PAGOS_CUN.PPT_CUN_TRANSACCION_PAGO pctp SET ESTADO = 'REJECTED'
+WHERE documento IN ('1005726768')
+AND ESTADO = 'PENDING'
+AND Descripcion = 'Pago cuota inicial cr�dito CTayuda. Servicios 360';
+
+SELECT Estado, a.* from PORTAL_PAGOS_CUN.ppt_cun_transaccion_pago a where documento IN ('1005726768') ORDER BY FECHA DESC;
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--Ver transaccion que tiene la persona con referencia de pago  (se utiliza mas que todo para rechazar pagos)
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_TRANSACCION_PAGO p	
+WHERE P.REFERENCIA IN ('','','','','118921691');
+
+
+
+----- 107455474  PSE
+----- 106046922  Bancolombia
+----- 109224480   ATH
+----- pendiente
+----- 110426917
+
+
+--SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_TRANSACCION_PAGO p	
+--WHERE P.REFERENCIA IN ('','','','101673987','110653780');
+
+--Ver transaccion que tiene la persona con el numero de la cedula 
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_TRANSACCION_PAGO p
+WHERE P.DOCUMENTO IN ('','','','','1073156628');
+
+--WHERE P.ESTADO = 'APPROVED_PARTIAL'; 
+
+--APPROVED
+--REJECTED
+--PENDING
+
+
+--Ver respuesta de pago, por referencia de pago
+SELECT  * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p 
+WHERE P.REFERENCIA IN ('','','107455474','1944140369');
+
+
+
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Bancolombia'AND p.STATUS = 'APPROVED' ORDER BY p.REFERENCE asc ; 
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'American Express' AND p.STATUS = 'APPROVED' ORDER BY p.REFERENCE asc ; 
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Visa' AND p.STATUS = 'APPROVED' ORDER BY p.REFERENCE asc ;
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'MasterCard'AND p.STATUS = 'APPROVED' ORDER BY p.REFERENCE asc ;
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Cuentas d�bito ahorro y corriente (PSE)' AND p.STATUS = 'APPROVED' AND p.REASON = '00';
+
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_RESPUESTA_PAGO p
+WHERE p.PAYMENTMETHODNAME  = 'Corresponsales bancarios Grupo Aval' AND p.STATUS = 'APPROVED' ORDER BY p.REFERENCE asc ;
+
+--T1_BC
+
+
+--Ver datalle de respuesta de pago, verificar cuando deberia estar en iceber por iceber
+SELECT * FROM PORTAL_PAGOS_CUN.PPT_CUN_DETALLE_RESPUESTA_PAGO p
+WHERE P.REFERENCIA IN ('','','1944140369');
